@@ -1,0 +1,133 @@
+iset title "3D 17x17 standard PWR Assembly - HOM-parameters"
+
+% --- Axial SEED pins definision
+%============================================
+
+% --- Fuel pins axial cut 1:
+pin 101
+Fuel_101     0.4095
+Clad         0.4750
+Water_101
+
+pin 201
+Water_101     0.5715
+Clad          0.6120
+Water_101
+
+% --- Axial Lattice definitions
+
+% --- Pin lattice axial cut 1:
+lat 301  1  0.0 0.0  17 17  1.260
+101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101
+101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101
+101  101  101  101  101  201  101  101  201  101  101  201  101  101  101  101  101
+101  101  101  201  101  101  101  101  101  101  101  101  101  201  101  101  101
+101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101
+101  101  201  101  101  201  101  101  201  101  101  201  101  101  201  101  101
+101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101
+101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101
+101  101  201  101  101  201  101  101  201  101  101  201  101  101  201  101  101
+101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101
+101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101
+101  101  201  101  101  201  101  101  201  101  101  201  101  101  201  101  101
+101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101
+101  101  101  201  101  101  101  101  101  101  101  101  101  201  101  101  101
+101  101  101  101  101  201  101  101  201  101  101  201  101  101  101  101  101
+101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101
+101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101  101
+
+
+
+
+
+% --- Assembly unit cell:
+surf  41  sqc    0.0  0.0  10.71  0               % Defenition of Assembly
+surf  42  sqc    0.0  0.0  10.75  0               % Defenition of Assembly + water
+
+
+%--- Assembly Cell Definition
+cell 401  0  fill 301        -41
+cell  96  0  Water_assembly  41 -42                                                                                 
+cell  97  0  outside         42                   % Outside world
+
+
+% ------------   Materials -------------------------------
+% --- Fuel:
+
+mat   Fuel_101    sum  burn 1 rgb 250 0 100      
+92235.09c  8.15077056e-004
+92238.09c  2.21889771e-002
+ 8016.09c  4.60081082e-002
+
+
+mat Water_101   -0.700  moder lwtr 1001 rgb 0 100 150                    
+1001.06c    2.0                                               
+8016.06c    1.0                                            
+                                                                     
+
+mat Water_assembly   0.0707872  moder lwtr 1001
+1001.06c    4.71915E-02
+8016.06c    2.35957E-02 
+               
+% --- Cladding:
+mat Clad       -6.55000 rgb 0 0 0
+40090.06c 0.5145
+40091.06c 0.1122
+40092.06c 0.1715
+40094.06c 0.1738
+40096.06c 0.0280
+               
+
+% --- Thermal scattering data for light water:
+
+therm lwtr lwj3.11t
+
+% --- Cross section library file path:
+
+set acelib "/usr/software/mcnplib/SERPENT/XSdata_endfb7/sss_endfb7u.xsdata"
+set declib "/usr/software/mcnplib/SERPENT/XSdata_endfb7/sss_endfb7.dec"
+set nfylib "/usr/software/mcnplib/SERPENT/XSdata_endfb7/sss_endfb7.nfy"
+
+
+set inventory
+ 541350
+ 922340
+ 922350
+ 942390
+
+
+set power 48074
+
+
+set bc 2
+
+% --- Group constant generation:
+
+% symmetry = 12
+set sym  0
+
+% --- Neutron population and criticality cycles:
+
+set pop 5000 200 50
+
+% --- Geometry and mesh plots:
+
+
+% mesh 3 500 500
+% mesh 2 500 3000
+% set outfile 1
+
+set pcc 0
+set opti 3
+set printm 1
+
+set egrid 5e-5 1e-9 15.0
+
+%% Group Constant Homogenization, energy groups from Hitachi data
+ene 1 1 1E-11 0.625E-6 15
+% 8-group structure 
+set gcu 0
+set nfg 8 1.4572E-07 6.2506E-07 3.9279E-06 1.3007E-04 9.1188E-03 8.2085E-01 2.2313E+00
+
+
+
