@@ -1,0 +1,171 @@
+% ------------------------------------------
+% Andrew Johnson
+%
+%  XSBoa
+%  Python wrapper for SERPENT XS generation
+%
+% Proposal
+% 24 Mar, 2017
+% 
+% ------------------------------------------
+
+\documentclass{article}
+
+\usepackage[left=1in, right=1in, top=1in, bottom=1in]{geometry}
+\usepackage{courier}
+
+\usepackage{listings}
+
+\newcommand{\boa}{\texttt{XSBoa}\,}
+\newcommand{\serp}{\texttt{SERPENT}\,}
+\title{\boa \\ SERPENT Wrapper for Cross Section Processing}
+\author{Andrew Johnson}
+\date{27 Mar, 2017}
+
+\begin{document}
+	\maketitle
+	\lstset{language=Python,deletekeywords={file,type},showspaces=false}
+	\section{Objective}
+	The purpose of this document is to describe the proposed plan for creating a program that creates homogenized cross sections for use in nodal diffusion codes.
+	This program, henceforth called \boa, will perform the following actions:
+	\begin{enumerate}
+		\item Read in a template \serp input file
+		\item Reproduce the input file with minor modifications, as to cover the design space of the problem including,
+		\begin{itemize}
+			\item fuel temperature
+			\item burnup
+			\item moderator density (void)
+			\item control rod insertion
+			\item soluble absorber concentration
+		\end{itemize}
+		\item Execute each template file in a manner that takes advantage of a parallel environment
+		\item Scrape \serp\, result files to obtain homogenized cross sections and transport parameters (e.g. kinetic parameters, assembly discontinuity factors, diffusion, delayed neutron fraction, etc.)
+		\item Allow maximum control over what parameters the user desires
+		\item Present these values in format befitting multiple applications 
+		\begin{itemize}
+			\item Human-readable text
+			\item \LaTeX-ready text
+			\item Direct input into nodal diffusion codes
+		\end{itemize}
+	\end{enumerate}
+
+	\section{Implementation} \label{sec:implement}
+	It is my preference to use Python 3.5 for this project, primarily due to Python's flexibility with string and file operations and the free nature of Python (vs. MATLAB) and secondarily due to my own comfort and skill with the language.
+	\subsection{Initialization} \label{sec:init}
+	I see three main operating regimes for \boa: \textbf{c}reation of input files, e\textbf{x}ecution of \serp, and \textbf{p}rocessing the output files
+\begin{lstlisting}
+XSBoa -file [-c|-x|-p]
+\end{lstlisting}
+	where the optional flags \texttt{-c|-x|-p} correspond to
+\begin{table}[h!]
+	\begin{tabular}{cl}
+		\texttt{[-c]} & running \boa through the creation on modified \serp input files \\
+		\texttt{[-x]} & creating and executing each modified input file \\
+		\texttt{[-p]} & processing the outputs from completed \serp runs
+	\end{tabular}
+\end{table}
+	I propose that the input parameter \texttt{file} is a valid, standalone \serp input file with header block, indicating parameters that control the branching calculations.
+\begin{lstlisting}
+/* Start Boa block
+	.
+	.
+	.
+End Boa block */
+\end{lstlisting}
+	So long as the beginning and ending of this data block can be identified simply, it can be read by the processing script, and then removed for each branching calculation.
+	\subsection{Identify state points}
+	For what I envision, \boa must be able to identify 
+	\begin{enumerate}
+		\item Nominal operation conditions\footnote{if the input file is constructed for the nominal case, then this option could be removed without any issue}
+		\item Modified conditions for branching
+		\item Burnup regimes
+		\item Universe swaps (i.e. control rod insertion or fuel assembly shuffling)
+	\end{enumerate}
+	I propose the following syntax for the first three conditions:
+\begin{lstlisting}
+nom <mat> <param> value
+	nom fuel3 temp 900
+	nom water1 dens -0.740
+branch <bname> <mat> <param> <value>
+	branch hFuel fuel3 temp 1200
+	branch v90 water1 dens -0.074
+burn <type> <schedule>
+	burn istep 1 4 5 15 25 50R6
+\end{lstlisting}
+	The nominal values would be the default parameters written to the input files.
+	In the case where the branch modifies the nominal value, then the branch value is used instead.
+	This could be accommodated in Python by using two dictionary containers for the nominal and branch states. 
+	
+\begin{lstlisting}
+branchD = {'fuel3': ('temp', 1200)}
+nomD = {'fuel3': ('temp', 900), 
+        'water1': ('dens', -0.740)}
+if mat in branchD:
+	# use values from branchD
+elif mat in nomD:
+	# use values from nomD
+\end{lstlisting}
+
+The burnup command would write appropriate \serp depletion cycles with the following keywords:
+\begin{table}[h!]
+\begin{tabular}{r|ll}
+	\texttt{istep} & \texttt{daystep} & incremental days \\
+	\texttt{cstep} & \texttt{daytot} & cummulative days \\
+	\texttt{iburn} & \texttt{bustep} & incremental burnup interval \\
+	\texttt{cburn} & \texttt{butot} & cummulative burnup interval \\
+	\texttt{idec} & \texttt{decstep} & incremental decay time \\
+	\texttt{cdec} & \texttt{dectot} & cummulative decay time \\
+\end{tabular}
+\end{table}[h!]
+In order to simplify the header file, one could either leave the depletion steps out of the header and write them directly into the \serp input file.
+Or, we could adopt syntax similar to \texttt{SCALE} and allow implicit repetition where the phrase \texttt{50R6} gets written as \texttt{50 50 50 50 50 50}.
+
+\subsection{Creation of Input Files} \label{sec:create}
+Up to this point, the design space has been specified through nominal and branching points.
+Now, for every individual branch calculation, a new input file will be written in the form 
+\begin{lstlisting}
+<input file>_<bname>
+\end{lstlisting}
+
+At this point, if the user executed \boa with the \texttt{-c} option, the code will successfully terminate.
+Otherwise, for each file created, \boa will execute the files according to
+\begin{lstlisting}
+exe_str = 'qsub -N {0} -v inparg={0} sub_serpent.pbs'
+for inp in files:
+	subprocess.call[exe_str.format(inp)]
+\end{lstlisting}
+The \texttt{.format} function replaces every instance of \texttt{$\lbrace$0$\rbrace$} with the name of the file \texttt{inp} and calls the execution string from \texttt{subprocess.call}.
+
+\section{Post-Processing} \label{sec:postProc}
+Every branch file that is created will be added to a text file that lists the name of the file, status of the operation (0 for not processed, -1 for errors, 1 if data has been processed), and branch states.
+Using this file, \boa executed with the \texttt{-p} flag would be able to quickly find the corresponding \texttt{\_res.m} files and scrape the desired data.
+\begin{table}[h!]
+	\begin{tabular}{ccc}
+		Branch Name & Status & Text output \\
+		\hline 
+		\hline
+		\texttt{hFuel} & 0 & None \\
+		\texttt{v90} & 1 & \texttt{outputs/test\_v90\_t.txt} \\
+	\end{tabular}
+\end{table}
+This table indicates that the branch \texttt{hFuel} has not been processed yet, and the desired outputs from branch \texttt{v90} are in the file \texttt{test\_v90\_t.txt} in directory \texttt{outputs}.
+
+Included in the \boa header block would be parameters indicating which values to extract from the output files. 
+These could be lumped into groups that would commonly be used together.
+Multigroup energy spectrum would be automatically extracted.
+
+\begin{table}[h!]
+\begin{tabular}{c|l}
+	INF & Infinite spectrum group constants \\
+	B1 & Leakage corrected group constants \\
+	KIN & Delayed neutron parameters and point kinetics values \\
+	ADF & Assembly discontinuity factors \\
+\end{tabular}
+\end{table}
+
+Once a file has been processed, the corresponding status value in the pointer text file would be updated to 1 if successful, -1 for errors.
+These parameters would be written to a single, human-readable text file for verification.
+An additional input parameter \texttt{-f} could be added to direct \boa to write the values in a specific format, i.e. for use in nodal diffusion codes.
+This section would require reading the output files in as class objects, containers for desired parameters, and methods for reading and writing the data.
+
+\end{document}
