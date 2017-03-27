@@ -1,2 +1,6 @@
 # Pycharm settings
 .idea
+
+# Python compiled packages
+__pycache__
+*.pyc
