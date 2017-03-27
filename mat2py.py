@@ -12,7 +12,7 @@ Functions
 import messages
 
 
-def numvec2list(vecstr_):
+def vec2list(vecstr_):
     """
     Convert a MATLAB vector to a list
      At the moment, works for single line vectors.
