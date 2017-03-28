@@ -77,12 +77,36 @@ def res_scraper(resfile, gculist, varlist, burnlist, burntype):
         messages.warn('Burntype specifier {0} not supported at this time. Please use one of the following: {1}\n'
                       .format(burntype, ' '.join(validBurntypes)), 'res_scraper()')
         return -2
-    # TODO add some potential error handling for non-positive integer values of nfg
 
-    gcu_vals = {gcu: None for gcu in gculist}
+    maxvarlen = max(varlist, key=len)  # length of longest string in varlist
+    gcu_vals = {gcu: {var: None for var in varlist} for gcu in gculist}
 
+    bflag = False
+    uflag = False
     with open(resfile, 'r') as res:
         line = res.readline()
-        # find the correct burnup point
-        while line[:len(burntype)] != burntype:
+        lcount = 1
+        while line != '':  # empty string indicates end of file
+            line_var = line[:27].rstrip(' ')
+            if line_var == burntype:
+                burnval = float(line.split()[-2])  # specific burnup point
+                if burnval in burnlist:
+                    bflag = True
+                else:
+                    bflag = False
+            elif bflag and line_var == 'GC_UNIVERSE_NAME':
+                if line.split()[-2] in gculist:
+                    uflag = True
+                    gcu = line.split()[-2]  # name of this universe
+                else:
+                    uflag = False
+            elif bflag and uflag and line_var in varlist:
+                gcu_vals[gcu][line_var] = vec2list(line.split('=')[1])
+                print(gcu, line_var)
             line = res.readline()
+            lcount += 1
+
+
+# TODO Add some check to see if all the desired values have been scraped
+# Testing
+v = res_scraper('testing/coreWithDep_res.m', ('4501',), ('INF_TOT', 'INF_S0'), (0,), 'BURNUP')
