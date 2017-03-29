@@ -8,7 +8,6 @@ A. Johnson
 """
 from os.path import exists
 from datetime import datetime
-import numpy as np
 import messages
 from mat2py import vec2list
 
@@ -109,9 +108,3 @@ def res_scraper(resfile, gculist, varlist, burnlist, burntype):
 
 
 # TODO Add some check to see if all the desired values have been scraped
-# Testing
-v = res_scraper('testing/simple_res.m', ('4501', '4502'), ('INF_TOT', 'INF_S0'), (0, 2.45753E-01), 'BURNUP')
-for gcu in v.keys():
-    print('---', gcu)
-    for val in v[gcu]:
-        print('  ', val, v[gcu][val])
