@@ -34,10 +34,10 @@ Group at Georgia Institute of Technology
 
 vRelease = 0
 vMacro = 1
-vMicro = 4
+vMicro = 5
 
-vDevel = ''  # 'dev' for developing features, '' for completed features
-vDevelMicro = 1  # empty string if feature is complete (i.e. vDevel = '')
+vDevel = 'dev'  # 'dev' for developing features, '' for completed features
+vDevelMicro = 3  # empty string if feature is complete (i.e. vDevel = '')
 
 if vDevel:
     version = "{}.{}.{}.{}{}".format(vRelease, vMacro, vMicro, vDevel, vDevelMicro)

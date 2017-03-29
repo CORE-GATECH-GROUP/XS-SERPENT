@@ -6,10 +6,11 @@ res_scaper
 A. Johnson
   
 """
-from os.path import exists
 from datetime import datetime
-import messages
-from mat2py import vec2list
+from os.path import exists
+
+import xsboa.messages as messages
+from xsboa.mat2py import vec2list
 
 validBurntypes = ('BURN_STEP', 'BURNUP', 'DAYS')
 

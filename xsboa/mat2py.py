@@ -9,7 +9,7 @@ Functions
     - vec2list: Convert a MATLAB vector to a list
 
 """
-import messages
+import xsboa.messages as messages
 
 
 def vec2list(vecstr_):
