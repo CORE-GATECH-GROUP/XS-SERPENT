@@ -78,16 +78,17 @@ def res_scraper(resfile, gculist, varlist, burnlist, burntype):
                       .format(burntype, ' '.join(validBurntypes)), 'res_scraper()')
         return -2
 
-    maxvarlen = max(varlist, key=len)  # length of longest string in varlist
-    gcu_vals = {gcu: {var: None for var in varlist} for gcu in gculist}
-
+    maxvarlen = max(25, len(max(varlist, key=len)))
+    # maximum length of any anticipated SERENT variable
+    gcu_vals = {gcu_: {var: [None for burn_ in burnlist] for var in varlist} for gcu_ in gculist}
+    # expand if too confusion
     bflag = False
     uflag = False
     with open(resfile, 'r') as res:
         line = res.readline()
         lcount = 1
         while line != '':  # empty string indicates end of file
-            line_var = line[:27].rstrip(' ')
+            line_var = line[:maxvarlen].rstrip(' ')
             if line_var == burntype:
                 burnval = float(line.split()[-2])  # specific burnup point
                 if burnval in burnlist:
@@ -95,18 +96,22 @@ def res_scraper(resfile, gculist, varlist, burnlist, burntype):
                 else:
                     bflag = False
             elif bflag and line_var == 'GC_UNIVERSE_NAME':
-                if line.split()[-2] in gculist:
+                gcu_ = line[line.index("'") + 1:line.index("' ;")]
+                if gcu_ in gculist:
                     uflag = True
-                    gcu = line.split()[-2]  # name of this universe
                 else:
                     uflag = False
             elif bflag and uflag and line_var in varlist:
-                gcu_vals[gcu][line_var] = vec2list(line.split('=')[1])
-                print(gcu, line_var)
+                gcu_vals[gcu_][line_var][burnlist.index(burnval)] = vec2list(line.split('=')[1])
             line = res.readline()
             lcount += 1
+    return gcu_vals
 
 
 # TODO Add some check to see if all the desired values have been scraped
 # Testing
-v = res_scraper('testing/coreWithDep_res.m', ('4501',), ('INF_TOT', 'INF_S0'), (0,), 'BURNUP')
+v = res_scraper('testing/simple_res.m', ('4501', '4502'), ('INF_TOT', 'INF_S0'), (0, 2.45753E-01), 'BURNUP')
+for gcu in v.keys():
+    print('---', gcu)
+    for val in v[gcu]:
+        print('  ', val, v[gcu][val])
