@@ -6,8 +6,8 @@ res_scaper
 A. Johnson
   
 """
+import os
 from datetime import datetime
-from os.path import exists
 
 import xsboa.messages as messages
 from xsboa.mat2py import vec2list
@@ -22,15 +22,22 @@ class SerpResFile(object):
         from SERPENT output files 
     """  # TODO: Fill this out better
 
-    def __init__(self, resfile: str, process: bool, gculist: list, varlist: list, burnlist: list, burntype: str):
+    def __init__(self, resfile: str, process: bool, gculist: (tuple, list), varlist: (tuple, list),
+                 burnlist: (tuple, list), burntype: str, args=None):
         """
-        
-        :param resfile: 
-        :param process: 
-        :param gculist:
-        :param varlist: 
-        :param burnlist: 
-        :param burntype: 
+        Initialize the attributes by either reading from resfile or initialize to None and read from a file (later
+        implemetation)
+        :param resfile: SERPENT result file (typically ending in _res.m) to be parsed 
+        :param process: If True, then read from self.resfile
+            Otherwise, initialize the variables and then (eventually) read the variables in from a processed output file
+        :param gculist: List of tuple of desired universes to be processed
+        :param varlist: List or tuple of desired variables to be processed
+        :param burnlist: List or tuple of relevant burnup points to be processed
+        :param burntype: Specific type of burnup paramter (i.e. BURN_DAYS) to use as flag for reading burnup and storing
+            burnup points
+        :param args: Optional parameter passed to the processing script. If None, all warning and error messages in 
+            res_scraper will be printed to the stdout. Otherwise, args must be a dictionary with 'verbose': bool and 
+            'output': str key-value pairs
         """
         self.resfile = resfile
         self.gculist = gculist
@@ -38,7 +45,7 @@ class SerpResFile(object):
         self.burnlist = burnlist
         self.burntype = burntype
         if process:
-            self.gcuvals = res_scraper(resfile, gculist, varlist, burnlist, burntype)
+            self.gcuvals = res_scraper(resfile, gculist, varlist, burnlist, burntype, args)
             self.time = str(datetime.now())
         else:
             self.time = None
@@ -50,7 +57,7 @@ class SerpResFile(object):
             # time should be read in from external file and written everytime the output files are written
 
 
-def res_scraper(resfile, gculist, varlist, burnlist, burntype):
+def res_scraper(resfile: str, gculist, varlist, burnlist, burntype, args=None):
     """
     Parse the _res.m file and return a dictionary where the keys are specified ` constant universes
     and the values are matrices of the desired variables at the desired points.
@@ -63,25 +70,36 @@ def res_scraper(resfile, gculist, varlist, burnlist, burntype):
     :param burnlist: List of burnup points (can be given in days of in burnup as specified by burntype)
     :param burntype: One of three values indicating what burnup values to look for
         BURN_STEP: unitless burnup point, BURNUP: value of burnup in MWd/kgU, BURN_DAYS: day in the burnup cycle
+    :param args: Optional parameter for output arguments. If None, then creates a dictionary indicating to print
+        all status messages to the screen. Otherwise, must be a dictionary with two keys: 'verbose': <bool>, and 
+        'output': <str>
     :return: gcu_vals dictionary where the keys are strings corresponding to the group constant universes, and the 
         corresponding values are the matrices gcu_vals[v, b, e]
         For errors:
             -1: resfile does not exist
             -2: incorrect burntype
     """
-    if not exists(resfile):
-        messages.warn('File {} does not exist and cannot be scraped'.format(resfile), 'res_scraper()')
+
+    if args is None:
+        args = {'verbose': True, 'output': None}
+
+    if not os.path.exists(resfile):
+        messages.warn('File {} does not exist and cannot be scraped'.format(os.path.join(os.getcwd(), resfile)),
+                      'res_scraper()', args)
         return -1
 
     if burntype not in validBurntypes:
         messages.warn('Burntype specifier {0} not supported at this time. Please use one of the following: {1}\n'
-                      .format(burntype, ' '.join(validBurntypes)), 'res_scraper()')
+                      .format(burntype, ' '.join(validBurntypes)), 'res_scraper()', args)
         return -2
+
+    messages.status('Processing file {}'.format(resfile), args)
 
     maxvarlen = max(25, len(max(varlist, key=len)))
     # maximum length of any anticipated SERENT variable
     gcu_vals = {gcu_: {var: [None for burn_ in burnlist] for var in varlist} for gcu_ in gculist}
-    # expand if too confusion
+
+    # expand if too confusing
     bflag = False
     uflag = False
     with open(resfile, 'r') as res:
@@ -105,6 +123,8 @@ def res_scraper(resfile, gculist, varlist, burnlist, burntype):
                 gcu_vals[gcu_][line_var][burnlist.index(burnval)] = vec2list(line.split('=')[1])
             line = res.readline()
             lcount += 1
+
+    messages.status(' -done', args)
     return gcu_vals
 
 
