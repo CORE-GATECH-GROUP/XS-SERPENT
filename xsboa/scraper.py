@@ -5,6 +5,11 @@ res_scaper
 
 A. Johnson
   
+Functions:
+    - res_scraper: Parse a SERPENT _res.m output file for desired variables, universes, and burnup points
+  
+Classes:
+    - SerpResFile: Class object for stanard SERPENT _res.m outputs files. 
 """
 import os
 from datetime import datetime
@@ -16,11 +21,24 @@ validBurntypes = ('BURN_STEP', 'BURNUP', 'DAYS')
 
 
 class SerpResFile(object):
-    """SERPENT _res.m output object
+    """SERPENT _res.m output object.
     
     Class for extracting, printing, and (eventually) plotting group constant values 
         from SERPENT output files 
-    """  # TODO: Fill this out better
+    
+    Attributes:
+        - resfile: Original SERPENT result file
+        - gculist: list/tuple of desired universes
+        - varlist: list/tuple of desired variables
+        - burnlist: list/tuple of desired burnup points
+        - burntype: string indicating that the original burnup points were determined by BURN_STEP, BURNUP, or
+            BURN_DAYS values from SERPENT
+        - gcuvals: dictionary of universes and their values as described in res_scraper docstring
+        - time: string indicating the time the 
+        
+    Methods:
+        
+    """
 
     def __init__(self, resfile: str, process: bool, gculist: (tuple, list), varlist: (tuple, list),
                  burnlist: (tuple, list), burntype: str, args=None):
@@ -35,7 +53,7 @@ class SerpResFile(object):
         :param burnlist: List or tuple of relevant burnup points to be processed
         :param burntype: Specific type of burnup paramter (i.e. BURN_DAYS) to use as flag for reading burnup and storing
             burnup points
-        :param args: Optional parameter passed to the processing script. If None, all warning and error messages in 
+        :param args: Optional parameter passed to the processing scripts. If None, all warning and error messages in 
             res_scraper will be printed to the stdout. Otherwise, args must be a dictionary with 'verbose': bool and 
             'output': str key-value pairs
         """
@@ -58,12 +76,10 @@ class SerpResFile(object):
 
 
 def res_scraper(resfile: str, gculist, varlist, burnlist, burntype, args=None):
-    """
-    Parse the _res.m file and return a dictionary where the keys are specified ` constant universes
+    """Parse resfile for variables from desired universes and burnup points.
+    Return a dictionary where the keys are specified constant universes
     and the values are matrices of the desired variables at the desired points.
-    Matrix returned has the following syntax: gcu_vals[v, b, e] where v is the index in varlist for this variable 
-    (i.e. INF_TOT, B1_FLX, etc), b is the index in burnlist that corresponds to the burnup step at this point, 
-    and e is the energy group (highest to lowest).
+
     :param resfile: Output file to be scraped.
     :param gculist: List of group constant universes to be returned
     :param varlist: List of variables the user desires to return
@@ -73,8 +89,13 @@ def res_scraper(resfile: str, gculist, varlist, burnlist, burntype, args=None):
     :param args: Optional parameter for output arguments. If None, then creates a dictionary indicating to print
         all status messages to the screen. Otherwise, must be a dictionary with two keys: 'verbose': <bool>, and 
         'output': <str>
-    :return: gcu_vals dictionary where the keys are strings corresponding to the group constant universes, and the 
-        corresponding values are the matrices gcu_vals[v, b, e]
+    :return: gcu_vals dictionary where the keys are strings corresponding to the group constant universes, and the
+        corresponding keys and dictionaries of variables. 
+        return {'0': {'INF_TOT': [[b0v0, b0u0, b0v1, b0u1, ...], [b1v0, b1u0, b1v1, b1u1, ...]], 
+                      'INF_NFS': [[b0v0, b0u0, b0v1, b0u1, ...], [b1v0, b1u0, b1v1, b1u1, ...]], ... }
+                 '1': {'INF_TOT': [[b0v0, b0u0, b0v1, b0u1, ...], [b1v0, b1u0, b1v1, b1u1, ...]], 
+                      'INF_NFS': [[b0v0, b0u0, b0v1, b0u1, ...], [b1v0, b1u0, b1v1, b1u1, ...]], ... },
+                ... } where b<n> indicates the burnup point values v<m> and uncertainties u<m> are pulled from
         For errors:
             -1: resfile does not exist
             -2: incorrect burntype
@@ -126,6 +147,3 @@ def res_scraper(resfile: str, gculist, varlist, burnlist, burntype, args=None):
 
     messages.status(' -done', args)
     return gcu_vals
-
-
-# TODO Add some check to see if all the desired values have been scraped

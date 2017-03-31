@@ -19,7 +19,7 @@ import argparse
 
 
 def get_args():
-    """Process input arguments
+    """Process input arguments.
     
     Return:
         input arguments in dictionary form
