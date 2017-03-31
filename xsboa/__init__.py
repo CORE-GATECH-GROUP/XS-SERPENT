@@ -2,3 +2,4 @@
 from xsboa.mat2py import *
 from xsboa.messages import *
 from xsboa.scraper import *
+from xsboa.readparam import *
