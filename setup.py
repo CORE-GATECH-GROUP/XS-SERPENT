@@ -34,10 +34,10 @@ Group at Georgia Institute of Technology
 
 vRelease = 0
 vMacro = 1
-vMicro = 4
+vMicro = 5
 
 vDevel = ''  # 'dev' for developing features, '' for completed features
-vDevelMicro = 1  # empty string if feature is complete (i.e. vDevel = '')
+vDevelMicro = 4  # empty string if feature is complete (i.e. vDevel = '')
 
 if vDevel:
     version = "{}.{}.{}.{}{}".format(vRelease, vMacro, vMicro, vDevel, vDevelMicro)
@@ -48,6 +48,7 @@ installReqs = (
     None
 )  # this is where any necessary and additional modules will be added like numpy, pandas, or matplotlib
 
+
 if __name__ == '__main__':
     setup(
         name='xsboa',
@@ -57,5 +58,6 @@ if __name__ == '__main__':
         maintainer='Computational Reactor Engineering Lab - Georgia Institute of Technology',
         url='https://github.com/CORE-GATECH-GROUP/XS-SERPENT',
         install_requires=installReqs,
-        packages=['xsboa']
+        packages=['xsboa'],
+        test_suite='testing'
     )

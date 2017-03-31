@@ -35,10 +35,13 @@ def status(msg_: str, args: dict):
     Print a simple status update if verbose parameter is true
     :param msg_: Message
     :param args: Dictionary of input arguments
-        - requires keys 'verbose': Bool and 'output': (None, str)
+        - uses keys 'verbose': Bool, 'output': (None, str),
+        and 'quiet' : Bool
     :return: None
     """
-    if args['verbose']:
+    if 'quiet' in args and args['quiet']:
+        return None
+    if 'verbose' in args and args['verbose']:
         oprint(msg_, args['output'])
     return None
 
@@ -50,8 +53,11 @@ def warn(msg_: str, loc_, args: dict):
     :param loc_: Location of the warning message
     :param args: Dictionary of input arguments
         - Requires key 'output' : (None or file string)
+        - If 'quiet' is a key, and args['quiet'] is True, do not print warnings
     :return: None
     """
+    if 'quiet' in args and args['quiet']:
+        return None
     oprint('Warning: ' + msg_, args['output'])
     if loc_ is not None:
         oprint(' in ' + loc_, args['output'])
