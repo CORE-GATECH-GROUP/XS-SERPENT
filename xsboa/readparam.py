@@ -38,6 +38,7 @@ Notes:
     
 """
 import os
+
 import xsboa
 
 
@@ -82,6 +83,8 @@ def readparam(infile: str, args=None):
         burnstrings: list of strings corresponding to burnup values with 
             burnstrings[0] corresponding to the nominal branch (could be empty '')
             all other items are burnup regimes for branch states (could not exist)
+        exe_str: Formattable string to call for execution of the SERPENT input files
+            ex: './sss2 {} > {}.o'
             
     For errors:
         locs = (False, -1) -> Could not open file
@@ -94,11 +97,12 @@ def readparam(infile: str, args=None):
     nom_d = {}
     branch_d = {}
     burnstrings = ['', ]
+    exe_str = ''
 
     if not os.path.exists(infile):
         xsboa.messages.warn('File {} does not exist and cannot be processed'.format(os.path.join(os.getcwd(), infile)),
                             'readparam()', args)
-        return (False, -1), nom_d, branch_d, burnstrings
+        return (False, -1), nom_d, branch_d, burnstrings, exe_str
 
     with open(infile, 'r') as inobj:
         line = inobj.readline()
@@ -119,6 +123,8 @@ def readparam(infile: str, args=None):
                             nom_d[lsplit[1]] = paramsplit(lsplit, 2, lcount + 1, args)
                         elif lsplit[0] == 'burn':
                             burnstrings[0] = line.strip()
+                        elif lsplit[0] == 'exe_str':
+                            exe_str = lsplit[1] + ' '.join(lsplit[2:])
                         elif lsplit[0] == 'branch':
                             branch_name = lsplit[1]
                             branch_d[branch_name] = {lsplit[2]: paramsplit(lsplit, 3, lcount + 1, args)}
@@ -128,7 +134,8 @@ def readparam(infile: str, args=None):
 
                             # check if this branch statement is divided over multiple lines
 
-                            while line.strip() != '' and line.split()[0] not in ('nom', 'branch') and '*/' not in line:
+                            while line.strip() != '' and line.split()[0] not in (
+                            'nom', 'branch', 'exe_str') and '*/' not in line:
                                 lsplit = line.split()
                                 if lsplit[0] == 'burn':
                                     branch_d[branch_name]['burn'] = len(burnstrings)
@@ -141,13 +148,13 @@ def readparam(infile: str, args=None):
                         line = inobj.readline()
                         lcount += 1
                     if line == '':
-                        return (block_start, block_end), nom_d, branch_d, burnstrings
+                        return (block_start, block_end), nom_d, branch_d, burnstrings, exe_str
                 block_end = lcount
                 xsboa.messages.status('  done', args)
-                return (block_start, block_end), nom_d, branch_d, burnstrings
+                return (block_start, block_end), nom_d, branch_d, burnstrings, exe_str
             line = inobj.readline()
             lcount += 1
-        return (True, -2), nom_d, branch_d, burnstrings
+        return (True, -2), nom_d, branch_d, burnstrings, exe_str
 
 
 # testing
