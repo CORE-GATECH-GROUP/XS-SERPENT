@@ -13,7 +13,7 @@ Functions:
 
 
 
-def bumat():
+def bumat(inpfile):
     '''
     Perturb the _bumat# file to include the brached conditions
     :param inpfile: _bumat input file
@@ -26,11 +26,8 @@ def bumat():
     import os
     from os.path import exists
     # testing
-    inpfile = '../testing/SINP019.bumat0'
-    outfile = '../testing/brached.bumat0'
-    mat = 'fuel1p80001r1p80001r1'
-    temp = '943.57'
-    prf = '.06c'
+    #inpfile = '../testing/SINP019.bumat0'
+
 
     args = {'verbose': True, 'output': None}
     validPrfTypes = ('.03c', '.06c', '.09c', '.12c', '.15c', '.18c')
@@ -58,8 +55,8 @@ def bumat():
     import re
 
     # testing
-    inpfile = './testing/SINP019.bumat0'
-    outfile = './testing/brached.bumat0'
+    inpfile = '../testing/SINP019.bumat0'
+    outfile = '../testing/brached.bumat0'
     mat = 'fuel1p80001r1p80001r1'
     temp = '943.57'
     prf = '.15c'
@@ -124,6 +121,8 @@ def bumat():
     fid_out.close()
 
 
+inpfile = '../testing/SINP019.bumat0'
+bumat(inpfile)
 
 
 

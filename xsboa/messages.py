@@ -46,7 +46,7 @@ def status(msg_: str, args: dict):
     return None
 
 
-def warn(msg_: str, loc_, args: dict):
+def warn(msg_: object, loc_: object, args: object) -> object:
     """
     Print a warning message
     :param msg_: Message
