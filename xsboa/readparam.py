@@ -88,7 +88,7 @@ def readparam(infile: str, args=None):
             
     For errors:
         locs = (False, -1) -> Could not open file
-        locs = (True, -1) -> Read through file, but could not find end of xsboa block
+        locs = (<block start>, -1) -> Read through file, but could not find end of xsboa block
         locs = (True, -2) -> Read through file, but could not find start of xsboa block 
     """
     if args is None:
@@ -124,7 +124,7 @@ def readparam(infile: str, args=None):
                         elif lsplit[0] == 'burn':
                             burnstrings[0] = line.strip()
                         elif lsplit[0] == 'exe_str':
-                            exe_str = lsplit[1] + ' '.join(lsplit[2:])
+                            exe_str = ' '.join(lsplit[1:])
                         elif lsplit[0] == 'branch':
                             branch_name = lsplit[1]
                             branch_d[branch_name] = {lsplit[2]: paramsplit(lsplit, 3, lcount + 1, args)}
@@ -135,7 +135,7 @@ def readparam(infile: str, args=None):
                             # check if this branch statement is divided over multiple lines
 
                             while line.strip() != '' and line.split()[0] not in (
-                            'nom', 'branch', 'exe_str') and '*/' not in line:
+                                    'nom', 'branch', 'exe_str') and '*/' not in line:
                                 lsplit = line.split()
                                 if lsplit[0] == 'burn':
                                     branch_d[branch_name]['burn'] = len(burnstrings)
