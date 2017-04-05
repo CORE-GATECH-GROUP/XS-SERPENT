@@ -7,7 +7,8 @@ A. Johnson
   
 Functions:
     - res_scraper: Parse a SERPENT _res.m output file for desired variables, universes, and burnup points
-  
+    - expand_res_kwords: Expand any variable keywords into actual SERPENT variables.
+    
 Classes:
     - SerpResFile: Class object for stanard SERPENT _res.m outputs files. 
 """
@@ -18,6 +19,14 @@ import xsboa.messages as messages
 from xsboa.mat2py import vec2list
 
 validBurntypes = ('BURN_STEP', 'BURNUP', 'DAYS')
+xsblocks = ['TOT', 'CAPT', 'ABS', 'FISS', 'NSF', 'NUBAR', 'TRANSPXS', 'DIFFCOEFF', 'CHID']
+validKeywords = {
+    'KIN': ['FWD_ANA_BETA_ZERO', 'FWD_ANA_LAMBDA', 'ADJ_MEULEKAMP_BETA_EFF', 'ADJ_MEULEKAMP_LAMBDA', 'ANA_INV_SPD'],
+    'TOX': ['INHALATION_TOXICITY', 'INGESTION_TOXICITY', 'ACTINIDE_INH_TOX', 'ACTINIDE_ING_TOX',
+            'FISSION_PRODUCT_INH_TOX', 'FISSION_PRODUCT_ING_TOX'],
+    'INF': ['INF_' + xs for xs in xsblocks],
+    'B1': ['B1_' + xs for xs in xsblocks]
+}
 
 
 class SerpResFile(object):
@@ -103,6 +112,10 @@ def res_scraper(resfile: str, gculist, varlist, burnlist, burntype, args=None):
 
     if args is None:
         args = {'verbose': True, 'output': None}
+    elif isinstance(args, dict):
+        for arg, deflt in zip(('verbose', 'output', 'quiet'), (True, None, False)):
+            if arg not in args:
+                args[arg] = deflt
 
     if not os.path.exists(resfile):
         messages.warn('File {} does not exist and cannot be scraped'.format(os.path.join(os.getcwd(), resfile)),
@@ -147,3 +160,37 @@ def res_scraper(resfile: str, gculist, varlist, burnlist, burntype, args=None):
 
     messages.status(' -done', args)
     return gcu_vals
+
+
+def expand_res_kwords(inkeys: list, args=None):
+    """
+    Expand any variable keywords into actual SERPENT variables.
+    The parameter block specifies what variables the user desires from the _res.m files.
+    Since the number of useful variables could be several dozen (cross sections, discontinuity factors, 
+    kinetic parameters, etc.), the user can specify specific keywords which will be expanded to include
+    commonly used values.
+    :param inkeys: Iterator of keywords from parameter block. Can be a mixed bag of direct SREPENT variables
+    and expandable keywords
+    :param args: arguments for status updates and errors
+        if not None, then must be a dictionary with the following keys:
+        - 'verbose' or 'quiet' -> boolean
+        - 'output': either None for printing to stdout, or the name of a file for appending messages
+    :return: Expanded list of variables to be scraped from _res.m
+    """
+
+    if args is None:
+        args = {'verbose': True, 'output': None}
+    elif isinstance(args, dict):
+        for arg, deflt in zip(('verbose', 'output', 'quiet'), (True, None, False)):
+            if arg not in args:
+                args[arg] = deflt
+
+    for ndx in range(len(inkeys)):
+        if inkeys[ndx] in validKeywords:
+            kwrd = inkeys.pop(ndx)
+            messages.status('Expanded and removed keyword {} from parameter string'.format(kwrd), args)
+            inkeys.extend(validKeywords[kwrd])
+        elif len(inkeys[ndx]) < 5:
+            messages.status('Did not recognize {} as a valid keyword. '
+                            'Possible typo or short SERPENT variable'.format(inkeys[ndx]), args)
+    return inkeys
