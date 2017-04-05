@@ -17,6 +17,8 @@
  branch void40b0 water1 void 40
  burn daystep 1 4 5R5 keep 1 30
 
+ var INF TOX INF_S0
+
 stop xsboa */
 % --- PWR MOX/UOX lattice from SERPENT manual section 11.1----
 % --- Problem title:

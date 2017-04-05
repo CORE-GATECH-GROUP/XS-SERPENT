@@ -85,6 +85,9 @@ def readparam(infile: str, args=None):
             all other items are burnup regimes for branch states (could not exist)
         exe_str: Formattable string to call for execution of the SERPENT input files
             ex: './sss2 {} > {}.o'
+        var_l: List of variables/keywords to be expanded and then scraped in res_scraper
+            - Will not be used for creation and execution of SERPENT input files
+            - Should not be none for processing. Or else what is the point?
             
     For errors:
         locs = (False, -1) -> Could not open file
@@ -98,11 +101,12 @@ def readparam(infile: str, args=None):
     branch_d = {}
     burnstrings = ['', ]
     exe_str = ''
+    var_l = []
 
     if not os.path.exists(infile):
         xsboa.messages.warn('File {} does not exist and cannot be processed'.format(os.path.join(os.getcwd(), infile)),
                             'readparam()', args)
-        return (False, -1), nom_d, branch_d, burnstrings, exe_str
+        return (False, -1), nom_d, branch_d, burnstrings, exe_str, var_l
 
     with open(infile, 'r') as inobj:
         line = inobj.readline()
@@ -125,6 +129,8 @@ def readparam(infile: str, args=None):
                             burnstrings[0] = line.strip()
                         elif lsplit[0] == 'exe_str':
                             exe_str = ' '.join(lsplit[1:])
+                        elif lsplit[0] == 'var':
+                            var_l = lsplit[1:]
                         elif lsplit[0] == 'branch':
                             branch_name = lsplit[1]
                             branch_d[branch_name] = {lsplit[2]: paramsplit(lsplit, 3, lcount + 1, args)}
@@ -148,13 +154,13 @@ def readparam(infile: str, args=None):
                         line = inobj.readline()
                         lcount += 1
                     if line == '':
-                        return (block_start, block_end), nom_d, branch_d, burnstrings, exe_str
+                        return (block_start, block_end), nom_d, branch_d, burnstrings, exe_str, var_l
                 block_end = lcount
                 xsboa.messages.status('  done', args)
-                return (block_start, block_end), nom_d, branch_d, burnstrings, exe_str
+                return (block_start, block_end), nom_d, branch_d, burnstrings, exe_str, var_l
             line = inobj.readline()
             lcount += 1
-        return (True, -2), nom_d, branch_d, burnstrings, exe_str
+        return (True, -2), nom_d, branch_d, burnstrings, exe_str, var_l
 
 
 # testing
