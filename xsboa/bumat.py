@@ -5,64 +5,62 @@ Messages
 D. Kotlyar
 
 Functions:
-    - perturb_bumat: 
+    - perturb_bumat: Modifies the temperature and prefix for a specific material
     - 
 
 """
 
+import os
+from datetime import datetime
+
+import messages as messages
 
 
-
-def bumat(inpfile):
+def perturb_bumat(inpfile, outfile, mat, temp, prf, args=None):
     '''
-    Perturb the _bumat# file to include the brached conditions
+    Perturb the _bumat# file to include the branched conditions (new temperature and prefix)
     :param inpfile: _bumat input file
-    :param outfile: perturbed file
+    :param outfile: the new name of the perturbed file
     :param mat: The name of the burnable material (str)
     :param temp: The temperature in Kelvins (str)
     :param prf: The prefix for cross-sections, e.g. '.09c' (str)
     :return: 
     '''
-    import os
-    from os.path import exists
-    # testing
-    #inpfile = '../testing/SINP019.bumat0'
 
-
-    args = {'verbose': True, 'output': None}
     validPrfTypes = ('.03c', '.06c', '.09c', '.12c', '.15c', '.18c')
+    validTmpTypes = (300, 600, 900, 1200, 1500, 1800)
 
+    if args is None:
+        args = {'verbose': True, 'output': None}
 
-    #if not os.path.exists(inpfile):
-    #    messages.warn('File {} does not exist and cannot be branched'.format(os.path.join(os.getcwd(), inpfile)),
-    #                  'perturb_bumat()', args)
-    #    return -1
-    #
-    #if prf not in validPrfTypes:
-    #    messages.warn('Prefix specifier {0} not supported at this time. Please use one of the following: {1}\n'
-    #                  .format(prf, ' '.join(validPrfTypes)), 'perturb_bumat()', args)
-    #    return -2
-    #
+    if args is None:
+        args = {'verbose': True, 'output': None}
 
-    #if float(temp) < 300:
-    #    messages.warn('The value of the temperature is too low {0}. Please use values above 300 Kelvin \n'
-    #                  .format(prf), 'perturb_bumat()', args)
-    #    return -2
+    if not os.path.exists(inpfile):
+        messages.warn('File {} does not exist and cannot be scraped'.format(os.path.join(os.getcwd(), inpfile)),
+                      'perturb_bumat()', args)
+        return -1
 
-    #messages.status('Processing file {}'.format(inpfile), args)
+    if prf not in validPrfTypes:
+        messages.warn('Prefix specifier {0} not supported at this time. Please use one of the following: {1}\n'
+                      .format(prf, ' '.join(validPrfTypes)), 'perturb_bumat()', args)
+        return -1
+
+    if (float(temp) < validTmpTypes[0]) | (float(temp) > (validTmpTypes[len(validTmpTypes)-1])):
+        messages.warn('The temperature [K] for material {0} is not in the range {1}-{2}. \n'
+                      .format(mat, validTmpTypes[0], validTmpTypes[(len(validTmpTypes)-1)]), 'perturb_bumat()', args)
+        return -2
+
+    if float(temp)< validTmpTypes[validPrfTypes.index(prf)]:
+        messages.warn('The temperature [K] for material {0} and prefix {1} must be above {2}. \n'
+                      .format(mat, prf, validTmpTypes[validPrfTypes.index(prf)]), 'perturb_bumat()', args)
+        return -2
+
+    messages.status('Processing file {}'.format(inpfile), args)
 
 
     import re
 
-    # testing
-    inpfile = '../testing/SINP019.bumat0'
-    outfile = '../testing/brached.bumat0'
-    mat = 'fuel1p80001r1p80001r1'
-    temp = '943.57'
-    prf = '.15c'
-
-    args = {'verbose': True, 'output': None}
-    validPrfTypes = ('.03c', '.06c', '.09c', '.12c', '.15c', '.18c')
 
     fid_in = open(inpfile, 'r')  # original _bumat file
     fid_out = open(outfile, 'w')  # modified (perturbed) _bumatfile
@@ -92,7 +90,7 @@ def bumat(inpfile):
             if temp == []:
                 tline = 'mat   ' + '  ' + mat + '  ' + ND + '  '
             else:
-                tline = 'mat   ' + '  ' + mat + '  ' + ND + '  ' + '  temp  ' + temp
+                tline = 'mat   ' + '  ' + mat + '  ' + ND + '  ' + '  tmp  ' + temp
 
             if condV == True:
                 tline = tline + '  vol ' + vol  # print the registered volume
@@ -121,8 +119,13 @@ def bumat(inpfile):
     fid_out.close()
 
 
-inpfile = '../testing/SINP019.bumat0'
-bumat(inpfile)
+# testing
+inpfile = '../testing/SINP020.bumat0'
+outfile = '../testing/brached.bumat0'
+mat = 'fuel2p80001r1'
+temp = '1043.57'
+prf = '.09c'
+perturb_bumat(inpfile, outfile, mat, temp, prf, args=None)
 
 
 
