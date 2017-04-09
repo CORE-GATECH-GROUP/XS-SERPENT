@@ -6,7 +6,8 @@ D. Kotlyar
 
 Functions:
     - perturb_bumat: Modifies the temperature and prefix for a specific material
-    - 
+    - get_materials_bumat: Scraps the modified names in _bumat file
+    - match
 
 """
 
@@ -33,11 +34,9 @@ def perturb_bumat(inpfile, outfile, mat, temp, prf, args=None):
     if args is None:
         args = {'verbose': True, 'output': None}
 
-    if args is None:
-        args = {'verbose': True, 'output': None}
 
     if not os.path.exists(inpfile):
-        messages.warn('File {} does not exist and cannot be scraped'.format(os.path.join(os.getcwd(), inpfile)),
+        messages.warn('File {} does not exist and cannot be perturbed'.format(os.path.join(os.getcwd(), inpfile)),
                       'perturb_bumat()', args)
         return -1
 
@@ -119,13 +118,92 @@ def perturb_bumat(inpfile, outfile, mat, temp, prf, args=None):
     fid_out.close()
 
 
+def get_materials_bumat(inpfile, args=None):
+    """
+    
+    :param inpfile: The _bumat input file 
+    :param args: 
+    :return: 
+    mat_id: the names of the modified materials
+    
+    """
+
+    if args is None:
+        args = {'verbose': True, 'output': None}
+
+
+    if not os.path.exists(inpfile):
+        messages.warn('File {} does not exist and cannot be perturbed'.format(os.path.join(os.getcwd(), inpfile)),
+                      'perturb_bumat()', args)
+        return -1
+
+
+    import re
+
+
+    fid_in = open(inpfile, 'r')
+
+    #mat_id=None
+    imat = 0
+    mat_id = list()
+    while True:
+
+        tline = fid_in.readline()  # read every line in the _bumat file
+        if tline == '':  # checks end-of-file
+            break
+
+        if 'mat' in tline:  # a material is found
+
+            vars_tline = tline.split()  # separate the variables in the line
+            if 'mat' in vars_tline[0]:
+                mat_id.insert(imat,vars_tline[1])
+                imat+=1
+    fid_in.close()
+    return mat_id # a list of material names
+
+
+def match_materials(inpfile, orig_mat_id, args=None):
+
+    """
+    
+    :param inpfile: input _bumat file
+    :param orig_mat_id: the original names of all the materials 
+    :param args: 
+    :return: 
+    """
+
+    if args is None:
+        args = {'verbose': True, 'output': None}
+
+
+    if not os.path.exists(inpfile):
+        messages.warn('File {} does not exist and cannot be perturbed'.format(os.path.join(os.getcwd(), inpfile)),
+                      'perturb_bumat()', args)
+        return -1
+
+
+    mod_mat_id = get_materials_bumat(inpfile, args=None) # obtain the modified names
+
+    if len(mod_mat_id)<len(orig_mat_id):
+        messages.warn('There are less burnable materials (={0}) in the {1} file than originally defined (={2})'.format(len(mod_mat_id), os.path.join(os.getcwd(),inpfile),len(orig_mat_id)),
+                      'match_materials()', args)
+        return -1
+
+
+
+
+
+
 # testing
 inpfile = '../testing/SINP020.bumat0'
 outfile = '../testing/brached.bumat0'
 mat = 'fuel2p80001r1'
 temp = '1043.57'
 prf = '.09c'
-perturb_bumat(inpfile, outfile, mat, temp, prf, args=None)
+
+#perturb_bumat(inpfile, outfile, mat, temp, prf, args=None)
+mod_mat_id = get_materials_bumat(inpfile, args=None)
+a=1
 
 
 
