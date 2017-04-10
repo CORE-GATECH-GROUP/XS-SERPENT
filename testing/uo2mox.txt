@@ -1,3 +1,25 @@
+/* start xsboa
+ nom UO2 temp 900 adens 6.585000E-02
+ nom MOX1 temp 900
+ nom MOX2 temp 900
+ nom MOX3 temp 900
+ nom water1 mdens 7.088200E-02 temp 600
+ burn 1 4 5R5 keep 1 30
+
+ exe_str qsub -v INPARG={} serp.pbs
+
+ branch hUO2 UO2 temp 1200
+ branch hFuel MOX1 temp 1200
+ MOX2 temp 1200
+ MOX3 temp 1200
+ UO2 temp 1200
+
+ branch void40b0 water1 void 40
+ burn daystep 1 4 5R5 keep 1 30
+
+ var INF TOX INF_S0
+
+stop xsboa */
 % --- PWR MOX/UOX lattice from SERPENT manual section 11.1----
 % --- Problem title:
 set title "MOX assembly in UOX lattice"
