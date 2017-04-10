@@ -26,27 +26,36 @@
             O.e3. <FATAL ERROR> no badburn in SERPENT syntax
 """
 
-
-inputStr = 'burn daytot 1 5 10 25 50'
+from xsboa import messages
 
 burnupTypes = ['bustep', 'butot', 'daystep', 'daytot', 'decstep', 'dectot']
-splittedString = str.split(inputStr)
-if splittedString[0]=='burn':
-    if splittedString[1] in burnupTypes:
-        print('dep ', splittedString[1])
 
-        for i in range(2, len(splittedString)):
+def burn_convert(inputStr, args):
 
-            if 'R' in splittedString[i]:
-                 splittedChar = splittedString[i].split('R')
-                 for j in range(0, int(splittedChar[1])):
-                     print(splittedChar[0])
-            elif any(c.isalpha() for c in splittedString[i]):
-                print('ERROR')
-            else:
-                print(splittedString[i])
+    splittedString = str.split(inputStr)
+    if splittedString[0]=='burn':
+        if splittedString[1] in burnupTypes:
+            newStr = ('dep ', splittedString[1]) + '/n'
+
+            for i in range(2, len(splittedString)):
+
+                if 'R' in splittedString[i]:
+                     splittedChar = splittedString[i].split('R')
+                     for j in range(0, int(splittedChar[1])):
+                         newStr += (splittedChar[0]) + '/n'
+                elif any(c.isalpha() for c in splittedString[i]):
+                    messages.fatal('invalid character \"{}\" found'.format(splittedString[i]), 'burn_convert', args)
+                else:
+                    newStr += (splittedString[i]) + '/n'
+        else:
+            messages.fatal('burnup type \"{}\" not found'.format(splittedString[0]), 'burn_convert', args)
+
     else:
-        print('ERROR')
+        messages.fatal('input \"{}\" not recognized'.format(splittedString[0]),'burn_convert',args)
 
-else:
-    print('ERROR')
+    return newStr + '/n' + '/n'
+
+#testing
+inputStr = 'burn daytot 1 5 10 25 50'
+
+burn_convert(inputStr, args={'verbose': True, 'output': None})
