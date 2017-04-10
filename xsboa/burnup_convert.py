@@ -35,25 +35,24 @@ def burn_convert(inputStr, args):
     splittedString = str.split(inputStr)
     if splittedString[0]=='burn':
         if splittedString[1] in burnupTypes:
-            newStr = ('dep ', splittedString[1]) + '/n'
+            newStr = 'dep ' + splittedString[1] + '\n'
 
-            for i in range(2, len(splittedString)):
+            if len(splittedString)<=2:
+                messages.fatal('no floats found', 'burn_convert', args)
+            else:
+                for i in range(2, len(splittedString)):
 
-                if 'R' in splittedString[i]:
-                     splittedChar = splittedString[i].split('R')
-                     for j in range(0, int(splittedChar[1])):
-                         newStr += (splittedChar[0]) + '/n'
-                elif any(c.isalpha() for c in splittedString[i]):
-                    messages.fatal('invalid character \"{}\" found'.format(splittedString[i]), 'burn_convert', args)
-                else:
-                    newStr += (splittedString[i]) + '/n'
-        else:
-            messages.fatal('burnup type \"{}\" not found'.format(splittedString[0]), 'burn_convert', args)
+                    if 'R' in splittedString[i]:
+                         splittedChar = splittedString[i].split('R')
+                         for j in range(0, int(splittedChar[1])):
+                             newStr += (splittedChar[0]) + '\n'
+                    elif any(c.isalpha() for c in splittedString[i]):
+                        messages.fatal('invalid character \"{}\" found'.format(splittedString[i]), 'burn_convert', args)
+                    else:
+                        newStr += (splittedString[i]) + '\n'
 
-    else:
-        messages.fatal('input \"{}\" not recognized'.format(splittedString[0]),'burn_convert',args)
 
-    return newStr + '/n' + '/n'
+    return newStr + '\n' + '\n'
 
 #testing
 inputStr = 'burn daytot 1 5 10 25 50'
