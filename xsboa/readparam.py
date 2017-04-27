@@ -84,7 +84,7 @@ def readparam(infile: str, args=None):
             burnstrings[0] corresponding to the nominal branch (could be empty '')
             all other items are burnup regimes for branch states (could not exist)
         exe_str: Formattable string to call for execution of the SERPENT input files
-            ex: './sss2 {} > {}.o'
+            ex: './sss2 {0} > {0}.o'
         var_l: List of variables/keywords to be expanded and then scraped in res_scraper
             - Will not be used for creation and execution of SERPENT input files
             - Should not be none for processing. Or else what is the point?
