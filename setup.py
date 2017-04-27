@@ -3,8 +3,6 @@
 Setup
     - Properly install xsboa
     
-A. Johnson
-    
 Executing this script will correctly install xsboa and submdoules and allow the user to use commands like
  `from xsboa.<submodule> import <subfunction>` from any directory.
  

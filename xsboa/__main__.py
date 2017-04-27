@@ -1,15 +1,14 @@
 r"""
-     __   __ _____ ____   ____
-     \ \ / // ____|  _ \ / __ \   /\
-      \ V /| (___ | |_) | |  | | /  \
-       > <  \___ \|  _ <| |  | |/ /\ \
-      / . \ ____) | |_) | |__| / ____ \
-     /_/ \_\_____/|____/ \____/_/    \_\
+                __   __ _____ ____   ____
+                \ \ / // ____|  _ \ / __ \   /\
+                 \ V /| (___ | |_) | |  | | /  \
+                  > <  \___ \|  _ <| |  | |/ /\ \
+                 / . \ ____) | |_) | |__| / ____ \
+                /_/ \_\_____/|____/ \____/_/    \_\
 
-                    XSBOA
-A wrapper program for generating homogenized
-macroscopic cross sections and group constant
-parameters with SERPENT.
+                              XSBOA
+A wrapper program for generating homogenized macroscopic cross sections
+and group constant parameters with SERPENT.
 
 Developed by Computational Reactor Engineering
 Group at Georgia Institute of Technology
