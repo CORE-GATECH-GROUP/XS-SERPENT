@@ -37,7 +37,7 @@ vMacro = 1
 vMicro = 8
 
 vDevel = 'dev'  # 'dev' for developing features, '' for completed features
-vDevelMicro = 1  # empty string if feature is complete (i.e. vDevel = '')
+vDevelMicro = 3  # empty string if feature is complete (i.e. vDevel = '')
 
 if vDevel:
     version = "{}.{}.{}.{}{}".format(vRelease, vMacro, vMicro, vDevel, vDevelMicro)
