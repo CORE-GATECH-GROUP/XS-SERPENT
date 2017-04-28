@@ -1,0 +1,28 @@
+/*
+Testing the nemtab-like output format for two perturbed cases
+moderator density = 650, 700
+fuel temperature = 900, 1200
+
+Create four branches manually as of v 0.1
+
+*/
+
+/* xsboa
+
+branch p1t1
+mod dens 650
+fuel temp 900
+
+branch p2t1
+mod dens 700
+fuel temp 900
+
+branch p1t2
+mod dens 650
+fuel temp 1200
+
+branch p2t2
+mod dens 700
+fuel temp 1200
+
+xsboa */
