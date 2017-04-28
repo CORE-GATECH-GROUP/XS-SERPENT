@@ -165,6 +165,7 @@ def readparam(infile: str, args=None):
             could not find end of xsboa block
         #. ``locs = (True, -2)`` -> Read through file, but could not 
             find start of xsboa block 
+            
     """
     if args is None:
         args = {'verbose': True, 'output': None}

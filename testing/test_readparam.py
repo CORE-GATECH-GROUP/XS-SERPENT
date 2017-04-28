@@ -36,7 +36,7 @@ class ReadParam_UO2Mox(unittest.TestCase):
 
         # Actual outputs
         self.aloc, self.anom, self.abranches, self.aexe, \
-        self.avar, self.agcu = readparam(self.input, args)
+            self.avar, self.agcu = readparam(self.input, args)
 
     def test_no_file(self):
         """Validate output if the file does not exist."""
