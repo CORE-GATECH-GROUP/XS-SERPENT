@@ -64,7 +64,7 @@ def perturb_mat(inpfile, outfile, mat, dens, tmp, prf, opt, args=None):
     fid_out = open(outfile, 'w')  # modified file
 
     flag_eof = 0
-
+    flag_mat = 0
     # Reset variables
     moder = [] # for S(alpha,beta) - thermal scattering
     cond_tmp = 0 # registers the existence of a tmp card
@@ -79,6 +79,7 @@ def perturb_mat(inpfile, outfile, mat, dens, tmp, prf, opt, args=None):
 
 
         if (mat in tline)& ('mat' in tline):  # material found
+            flag_mat = 1
             vars_tline = tline.split()  # separate the variables in the line
             for idx in range(len(vars_tline)):  # loop over the variables in the list
                 if vars_tline[idx] == mat:  # density of the material
@@ -90,7 +91,7 @@ def perturb_mat(inpfile, outfile, mat, dens, tmp, prf, opt, args=None):
                 if vars_tline[idx] == 'moder':
                     moder = vars_tline[idx+1]  # register the scattering material
 
-            if cond_tmp:
+            if (tmp != []) & (cond_tmp != 1):
                 tline = (' '.join(vars_tline)) + ' tmp ' + tmp
             else:
                 tline = (' '.join(vars_tline))
@@ -116,7 +117,7 @@ def perturb_mat(inpfile, outfile, mat, dens, tmp, prf, opt, args=None):
                 else:
                     fid_out.writelines('\n')
                     break
-
+        fid_out.writelines(tline)
 
 
     fid_in.close()
@@ -128,6 +129,8 @@ def perturb_mat(inpfile, outfile, mat, dens, tmp, prf, opt, args=None):
         fid_out = open(outfile, 'r')
         tlines = fid_out.readlines()
         fid_out.close()
+
+        fid_out = open(outfile, 'w')
         scttherm = []
         for tline in tlines:
             if ('therm' in tline) & (moder in tline):
@@ -162,27 +165,32 @@ def perturb_mat(inpfile, outfile, mat, dens, tmp, prf, opt, args=None):
                                  scttherm = thermsctrgrj[itmp][1]
                             break
             if scttherm!=[]:
-                tline = 'therm moder ' + scttherm
-        fid_out.writelines(tline)
+                tline = 'therm ' + moder + ' ' + scttherm + '\n'
+                scttherm = []
+            fid_out.write(tline)
     fid_out.close()
 
 
     # if everything is ok
-    return 0
+    if flag_mat == 1:
+        return 0
+    else:
+        return -3 # material is not found
+
 
 
 # ----------------------------------------------------------------------
 #                        testing
 # ----------------------------------------------------------------------
-inpfile = '../testing/uo2material'
-outfile = '../testing/waterperturb'
+#inpfile = '../testing/uo2material.txt'
+#outfile = '../testing/waterperturb'
 
-mat='water'
-dens='-0.54321'
-tmp='666'
-prf='.07c'
-opt='temperature, density'
+#mat='water'
+#dens='-0.54321'
+#tmp='666'
+#prf='.09c'
+#opt='temperature, density'
 
-perturb_mat(inpfile, outfile, mat, dens, tmp, prf, opt)
-a=1
+#perturb_mat(inpfile, outfile, mat, dens, tmp, prf, opt)
+#a=1
 
