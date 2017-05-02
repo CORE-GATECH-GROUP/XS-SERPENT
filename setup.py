@@ -34,7 +34,7 @@ Group at Georgia Institute of Technology
 
 vRelease = 0
 vMacro = 1
-vMicro = 8
+vMicro = 9
 
 vDevel = 'dev'  # 'dev' for developing features, '' for completed features
 vDevelMicro = 3  # empty string if feature is complete (i.e. vDevel = '')
