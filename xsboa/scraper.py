@@ -49,22 +49,26 @@ class SerpResFile(object):
         
     """
 
-    def __init__(self, resfile: str, process: bool, gculist: (tuple, list), varlist: (tuple, list),
-                 burnlist: (tuple, list), burntype: str, args=None):
+    def __init__(self, resfile: str, process: bool, gculist: (tuple, list),
+                 varlist: (tuple, list), burnlist: (tuple, list, None),
+                 burntype: str, args=None):
         """
-        Initialize the attributes by either reading from resfile or initialize to None and read from a file (later
-        implemetation)
+        Initialize the attributes by either reading from resfile or initialize
+        to None and read from a file (laterimplemetation)
         :param resfile: SERPENT result file (typically ending in _res.m) to be parsed 
         :param process: If True, then read from self.resfile
-            Otherwise, initialize the variables and then (eventually) read the variables in from a processed output file
+            Otherwise, initialize the variables and then (eventually) read the 
+            variables in from a processed output file
         :param gculist: List of tuple of desired universes to be processed
         :param varlist: List or tuple of desired variables to be processed
         :param burnlist: List or tuple of relevant burnup points to be processed
-        :param burntype: Specific type of burnup paramter (i.e. BURN_DAYS) to use as flag for reading burnup and storing
-            burnup points
-        :param args: Optional parameter passed to the processing scripts. If None, all warning and error messages in 
-            res_scraper will be printed to the stdout. Otherwise, args must be a dictionary with 'verbose': bool and 
-            'output': str key-value pairs
+        :param burntype: Specific type of burnup paramter (i.e. BURN_DAYS) to 
+        use as flag for reading burnup and storing burnup points
+        :param args: Optional parameter passed to the processing scripts. 
+        If None, all warning and error messages in res_scraper will be 
+        printed to the stdout. 
+        Otherwise, args must be a dictionary with 'verbose': bool and 
+        'output': str key-value pairs
         """
         self.resfile = resfile
         self.gculist = gculist
@@ -84,10 +88,15 @@ class SerpResFile(object):
             # time should be read in from external file and written everytime the output files are written
 
 
-def res_scraper(resfile: str, gculist, varlist, burnlist, burntype, args=None):
+def res_scraper(resfile: str, gculist, varlist, burnlist=None, burntype=None, args=None):
     """Parse resfile for variables from desired universes and burnup points.
+    
     Return a dictionary where the keys are specified constant universes
     and the values are matrices of the desired variables at the desired points.
+    If ``burnlist`` is not None, but is a list, then only burnup points in
+    ``burnlist`` will be returned. For the case there could be no burnup
+    points in the file, all values fitting the gcu and varlist parameters
+    will be returned
 
     :param resfile: Output file to be scraped.
     :param gculist: List of group constant universes to be returned
@@ -98,16 +107,25 @@ def res_scraper(resfile: str, gculist, varlist, burnlist, burntype, args=None):
     :param args: Optional parameter for output arguments. If None, then creates a dictionary indicating to print
         all status messages to the screen. Otherwise, must be a dictionary with two keys: 'verbose': <bool>, and 
         'output': <str>
+        
     :return: gcu_vals dictionary where the keys are strings corresponding to the group constant universes, and the
         corresponding keys and dictionaries of variables. 
-        return {'0': {'INF_TOT': [[b0v0, b0u0, b0v1, b0u1, ...], [b1v0, b1u0, b1v1, b1u1, ...]], 
-                      'INF_NFS': [[b0v0, b0u0, b0v1, b0u1, ...], [b1v0, b1u0, b1v1, b1u1, ...]], ... }
-                 '1': {'INF_TOT': [[b0v0, b0u0, b0v1, b0u1, ...], [b1v0, b1u0, b1v1, b1u1, ...]], 
-                      'INF_NFS': [[b0v0, b0u0, b0v1, b0u1, ...], [b1v0, b1u0, b1v1, b1u1, ...]], ... },
-                ... } where b<n> indicates the burnup point values v<m> and uncertainties u<m> are pulled from
+        return ::
+        
+        {'0': {'INF_TOT': [[b0v0, b0u0, b0v1, b0u1, ...], [b1v0, b1u0, b1v1, b1u1, ...]], 
+              'INF_NFS': [[b0v0, b0u0, b0v1, b0u1, ...], [b1v0, b1u0, b1v1, b1u1, ...]], ... }
+        '1': {'INF_TOT': [[b0v0, b0u0, b0v1, b0u1, ...], [b1v0, b1u0, b1v1, b1u1, ...]], 
+              'INF_NFS': [[b0v0, b0u0, b0v1, b0u1, ...], [b1v0, b1u0, b1v1, b1u1, ...]], ... },
+        ... } 
+        
+        where ``b<n>`` indicates the burnup point values ``v<m>``
+         and uncertainties ``u<m>`` are pulled from
+         
         For errors:
-            -1: resfile does not exist
-            -2: incorrect burntype
+           
+            #. -1: resfile does not exist
+            #. -2: incorrect burntype
+            #. -3: burnlist not iterable
     """
 
     if args is None:
@@ -122,29 +140,51 @@ def res_scraper(resfile: str, gculist, varlist, burnlist, burntype, args=None):
                       'res_scraper()', args)
         return -1
 
-    if burntype not in validBurntypes:
-        messages.warn('Burntype specifier {0} not supported at this time. Please use one of the following: {1}\n'
-                      .format(burntype, ' '.join(validBurntypes)), 'res_scraper()', args)
-        return -2
+    if burnlist is not None:
+        if burntype not in validBurntypes:
+            messages.warn('Burntype specifier {0} not supported at this time. Please use one of the following: {1}\n'
+                          .format(burntype, ' '.join(validBurntypes)), 'res_scraper()', args)
+            return -2
+        try:
+            iter(burnlist)
+        except TypeError:
+            messages.warn('burnlist {0} not iterable'.format(type(burnlist)) +
+                          str(burnlist), 'res_scraper()', args)
+            return -3
 
     messages.status('Processing file {}'.format(resfile), args)
 
     maxvarlen = max(25, len(max(varlist, key=len)))
     # maximum length of any anticipated SERENT variable
-    gcu_vals = {gcu_: {var: [None for burn_ in burnlist] for var in varlist} for gcu_ in gculist}
 
-    # expand if too confusing
-    bflag = False
+    if burnlist is not None:
+        bflag = False
+    else:
+        bflag = True
+
+    burnloc = 0
+    gcu_ = -1
+
+    gcu_vals = {}
+    for gcu_ in gculist:
+        gcu_vals[gcu_] = {}
+        for var in varlist:
+            if burnlist is not None:
+                gcu_vals[gcu_][var] = [None] * len(burnlist)
+            else:
+                gcu_vals[gcu_][var] = [None, ]
+
     uflag = False
     with open(resfile, 'r') as res:
         line = res.readline()
         lcount = 1
         while line != '':  # empty string indicates end of file
             line_var = line[:maxvarlen].rstrip(' ')
-            if line_var == burntype:
+            if burnlist is not None and line_var == burntype:
                 burnval = float(line.split()[-2])  # specific burnup point
                 if burnval in burnlist:
                     bflag = True
+                    burnloc = burnlist.index(burnval)
                 else:
                     bflag = False
             elif bflag and line_var == 'GC_UNIVERSE_NAME':
@@ -154,7 +194,7 @@ def res_scraper(resfile: str, gculist, varlist, burnlist, burntype, args=None):
                 else:
                     uflag = False
             elif bflag and uflag and line_var in varlist:
-                gcu_vals[gcu_][line_var][burnlist.index(burnval)] = vec2list(line.split('=')[1])
+                gcu_vals[gcu_][line_var][burnloc] = vec2list(line.split('=')[1])
             line = res.readline()
             lcount += 1
 
