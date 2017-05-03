@@ -116,3 +116,4 @@ if __name__ == '__main__':
     else:
         with open(kwargs['output'], 'w') as out:
             out.write(__doc__)
+
