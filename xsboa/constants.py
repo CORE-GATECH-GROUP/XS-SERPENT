@@ -39,6 +39,9 @@ The following libraries are currently supported:
     #. `` jeff311``
     
 """
+import textwrap
+
+import xsboa.messages as messages
 
 _xslib = dict()
 
@@ -82,6 +85,84 @@ _xslib['jeff311'] = {'c': {300: '03c', 600: '06c', 900: '09c', 1200: '12c', 1500
                             1000: '20t', 294: '00t', 550: '10t', 650: '14t', 324: '01t', 374: '03t', 424: '05t',
                             474: '07t', 524: '09t', 574: '11t', 624: '13t', 647: '14t'}}
 
+_defaults = {
+    'lib': 'endfb7',
+    'verbose': False,
+    'quiet': False,
+    'output': None,
+}
+
+perts = ('adens', 'mdens', 'temp', 'void')
+perfDefs = ('Atomic density overwrite', 'Mass density overwrite',
+            'Temperature overwrite', 'Density update based on void fraction')
+
+burntypes = ('daystep', 'daytot', 'bustep', 'butot', 'decstep', 'dectot')
+burnDefs = ('interval depletion step [days]', 'cummulative depletion step [days]',
+            'interval depletion step [MWd/kgU]', 'cummulative depletion step [MWd/kgU]',
+            'interval decay step [days]', 'cummulative decay step [days]')
+
+
+def showdefaults(**args: dict):
+    """Show the default and supported parameters.
+    
+    Raises system exit
+    """
+    if 'verbose' in args:
+        vv = args['verbose']
+    else:
+        vv = False
+    nestgap = '  '
+
+    print('\nxsboa defaults\n')
+    keylen = len(max(list(_defaults.keys()), key=len))
+    for defkey in _defaults:
+        print(nestgap + '{} : {}'.format(
+            textwrap.indent(defkey, ' ' * (keylen - len(defkey))),
+            _defaults[defkey]))
+
+    if vv:
+        print('\nSupported suffixes and temperatures '
+              'in default cross section library')
+    else:
+        print('\nSupported material suffixes in default cross section library')
+    keylen = len(max(list(_xslib[_defaults['lib']].keys()), key=len))
+    for dlib in _xslib[_defaults['lib']]:
+        print(nestgap + '{} '.format(
+            textwrap.indent(dlib, ' ' * (keylen - len(dlib)))), end='')
+        if vv:
+            newdent = len(nestgap) * 2 + keylen
+            tmps = nestgap.join([str(tt) for tt in
+                                 sorted(list(_xslib[_defaults['lib']][dlib].keys()))])
+            print(''.join(textwrap.wrap(tmps, width=55, initial_indent='\n' + ' ' * newdent,
+                                        subsequent_indent='\n' + ' ' * newdent)))
+        else:
+            print('')
+    if vv:
+        prettyprint_supports('Supported perturbations', perts, nestgap,
+                             extras=perfDefs)
+        prettyprint_supports('Supported burnup strings', burntypes, nestgap,
+                             extras=burnDefs)
+    else:
+        prettyprint_supports('Supported perturbations', perts, nestgap)
+        prettyprint_supports('Supported burnup strings', burntypes, nestgap)
+
+    raise SystemExit
+
+
+def prettyprint_supports(tstr: str, supports: (list, tuple), init_gap: str,
+                         extras=None):
+    """Print the supported string in a nice way"""
+    print('\n', tstr)
+    keylen = len(max(supports, key=len))
+    for nn, sup in enumerate(supports):
+        print(init_gap, '{}'.format(
+            textwrap.indent(sup, ' ' * (keylen - len(sup)))
+        ), end='')
+        if extras is not None:
+            print(':', extras[nn])
+        else:
+            print('')
+
 
 def getxslib(path: str):
     """Return a dictionary structured according to the docstring
@@ -119,10 +200,70 @@ def getxslib(path: str):
 
 
 def tempsuffix(temp: (int, float), libtype='c', **args):
-    """
+    """Return the correct library suffix for a given temperature.
     
-    :param temp: 
-    :param libtype: 
-    :param args: 
-    :return: 
+    ``SERPENT`` requires that the nuclide library used be from the 
+    closest temparature below the desired temperature to properly
+    broaden the cross sections.
+    
+    Ex. Given valid temperatures 300, 600, 900, and 1200, plus a 
+    desired  temperature of 1000, ``SERPENT`` could accept the 300-
+    900K  libraries, but the 900K library would be the most accurate.
+    
+    :param temp: Material temperature in K
+    :param libtype: Type of library. Typical cases included ``'c'`` for
+    continuous energy and various thermal scattering  libraries. For 
+    the case of generality, the current _xslib structure includes
+    unique keys for light and heavy water media, as well as graphite.
+    The libtype arguments for these scattering libraries would be
+    ``'lw'``, ``'hw'``, and ``'gr'`` respectively.
+    :param args: Arguments to pass into messages, or to obtain a 
+    user specified library.
+    
+    :return: Valid library suffix
+     
+     For errors:
+     
+        #. -1: Specified temperature is below the lowest temperature
+        in the library (typically 300K)
     """
+    if 'lib' not in args:
+        libn = _defaults['lib']
+    else:
+        libn = args['lib']
+        if libn not in _xslib:
+            messages.fatal('Library type {} not found in _xslib'.format(libn),
+                           'constants.tempsuffix()', args)
+
+    tvec = sorted(list(_xslib[libn][libtype].keys()))
+    if min(tvec) < temp < max(tvec):
+        diff = [tt - temp for tt in tvec]
+        nn = 0
+        while nn < len(diff):
+            if diff[nn] <= 0 < diff[nn + 1]:
+                return _xslib[libn][libtype][tvec[nn]]
+            nn += 1
+
+    else:
+        if temp < min(tvec):
+            return -1
+        elif temp == min(tvec):
+            return _xslib[libn][libtype][temp]
+        if temp >= max(tvec):
+            return _xslib[libn][libtype][max(tvec)]
+    # if we've made it here, then something didn't work right, maybe in the while loop?
+    raise RuntimeError('Did not properly return from constants.tempsuffix()'
+                       ' temp: {}, libtype: {}'.format(temp, libtype))
+
+
+def checkargs_defaults(argdict: dict):
+    """Return a dictionary with the default parameters added, if not present."""
+    for arg in _defaults:
+        if arg not in argdict:
+            argdict[arg] = _defaults[arg]
+    return argdict
+
+
+# Testing
+if __name__ == '__main__':
+    showdefaults(**{'verbose': True})
