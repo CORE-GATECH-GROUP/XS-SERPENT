@@ -6,7 +6,7 @@
  nom water1 mdens 7.088200E-02 temp 600
  burn 1 4 5R5 keep 1 30
 
- exe_str qsub -v INPARG={} serp.pbs
+ exe_str qsub -v INPARG={0} serp.pbs
 
  branch hUO2 UO2 temp 1200
  branch hFuel MOX1 temp 1200
