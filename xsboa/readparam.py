@@ -93,6 +93,7 @@ def paramsplit(lsplit: (list, tuple), start_indx: int, lcount: int,
     follows: ``['p0', 'v0', 'p1', 'v1', ...]``
     Each value v<n> will be converted to float. If not, a fatal error 
     is raised.
+    
     :param lsplit: List/tuple of line that has been split
     :param start_indx: Index of the first parameter 
     :param lcount: current location in file (used in fatal error)
@@ -165,7 +166,7 @@ def readparam(infile: str, args=None):
             could not find end of xsboa block
         #. ``locs = (True, -2)`` -> Read through file, but could not 
             find start of xsboa block 
-            
+
     """
     if args is None:
         args = {'verbose': True, 'output': None}
