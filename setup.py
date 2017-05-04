@@ -34,7 +34,7 @@ vRelease = 0
 vMacro = 1
 vMicro = 10
 
-vDevel = ''  # 'dev' for developing features, '' for completed features
+vDevel = 'dev'  # 'dev' for developing features, '' for completed features
 vDevelMicro = 2  # empty string if feature is complete (i.e. vDevel = '')
 
 if vDevel:
