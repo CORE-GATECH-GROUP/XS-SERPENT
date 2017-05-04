@@ -3,21 +3,17 @@
  nom MOX1 temp 900
  nom MOX2 temp 900
  nom MOX3 temp 900
- nom water1 mdens 7.088200E-02 temp 600
- burn 1 4 5R5 keep 1 30
+ nom water mdens 7.088200E-02 temp 600
+ burn daystep 1 4 5R5 keep 1 30
 
  exe_str qsub -v INPARG={0} serp.pbs
 
- branch hUO2 UO2 temp 1200
- branch hFuel MOX1 temp 1200
- MOX2 temp 1200
- MOX3 temp 1200
- UO2 temp 1200
-
- branch void40b0 water1 void 40
- burn daystep 1 4 5R5 keep 1 30
+ branch mod_dens water mdens 6E-02 6.5E-02
+ branch uo2_temp UO2 temp 800 1100
+ branch mox_temp MOX1,MOX2,MOX3 temp 800 1100
 
  var INF TOX INF_S0
+ gcu 200
 
 stop xsboa */
 % --- PWR MOX/UOX lattice from SERPENT manual section 11.1----

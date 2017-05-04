@@ -13,30 +13,30 @@ import unittest
 from xsboa import readparam
 
 args = {'quiet': True, 'output': None}
-inpfile = os.path.join('testing', 'uo2mox.txt')
 
 
-class TestReadParam(unittest.TestCase):
+class ReadParam_UO2Mox(unittest.TestCase):
     def setUp(self):
         # Intended outputs
-        self.loc = (0, 21)
+        self.input = os.path.join('testing', 'uo2mox', 'uo2mox.txt')
+        self.loc = (0, 17)
         self.nom = {'UO2': {'temp': 900, 'adens': 6.5850E-02},
                     'MOX1': {'temp': 900}, 'MOX2': {'temp': 900},
                     'MOX3': {'temp': 900},
-                    'water1': {'mdens': 7.088200E-02, 'temp': 600},
-                    'burn': 'burn 1 4 5R5 keep 1 30'}
+                    'water': {'mdens': 7.088200E-02, 'temp': 600},
+                    'burn': 'daystep 1 4 5R5 keep 1 30'}
         self.exe = 'qsub -v INPARG={0} serp.pbs'
-        self.branches = {'hUO2': {'UO2': {'temp': 1200}},
-                         'hFuel': {'UO2': {'temp': 1200},
-                                   'MOX1': {'temp': 1200},
-                                   'MOX2': {'temp': 1200},
-                                   'MOX3': {'temp': 1200}},
-                         'void40b0': {'water1': {'void': 40},
-                                      'burn': 'burn daystep 1 4 5R5 keep 1 30'}}
+        self.branches = {
+            'mod_dens': (['water'], 'mdens', [6E-02, 6.5E-02]),
+            'uo2_temp': (['UO2'], 'temp', [800., 1100.]),
+            'mox_temp': (['MOX1', 'MOX2', 'MOX3'], 'temp', [800., 1100.])
+        }
         self.var = ['INF', 'TOX', 'INF_S0']
+        self.gcu = ['200']
 
         # Actual outputs
-        self.aloc, self.anom, self.abranches, self.aexe, self.avar = readparam(inpfile, args)
+        self.aloc, self.anom, self.abranches, self.aexe, \
+        self.avar, self.agcu = readparam(self.input, args)
 
     def test_no_file(self):
         """Validate output if the file does not exist."""
