@@ -6,7 +6,7 @@
 
  branch mod_dens water mdens 6E-02 6.5E-02
  branch uo2_temp UO2 temp 800 1100
- branch mod_temp water1 temp 600 800
+ branch mod_temp water temp 600 800
 
  var INF TOX INF_S0
  gcu 0

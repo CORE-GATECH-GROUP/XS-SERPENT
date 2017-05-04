@@ -140,7 +140,7 @@ def readparam(infile: str, args=None):
     
     :return: 
         
-        #.locs - tuple of start and end indices of data block.
+        #. locs - tuple of start and end indices of data block.
             Note: Will be zero indexed i.e. line 1 is read as line 0
         #. nom_d - dictionary of materials and their nominal conditions.
             None if no nominal conditions given
