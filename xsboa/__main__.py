@@ -10,8 +10,8 @@ r"""
 A wrapper program for generating homogenized macroscopic cross sections
 and group constant parameters with SERPENT.
 
-Developed by Computational Reactor Engineering
-Group at Georgia Institute of Technology
+Developed by Computational Reactor Engineering Group at Georgia 
+Institute of Technology
 
 
 """
@@ -19,7 +19,7 @@ import argparse
 
 import xsboa.constants as xbcons
 
-VERSION = '0.1.9'
+VERSION = '0.1.11'
 
 
 def get_args():

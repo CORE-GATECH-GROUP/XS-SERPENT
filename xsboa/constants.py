@@ -101,6 +101,17 @@ burnDefs = ('interval depletion step [days]', 'cummulative depletion step [days]
             'interval depletion step [MWd/kgU]', 'cummulative depletion step [MWd/kgU]',
             'interval decay step [days]', 'cummulative decay step [days]')
 
+# Accepted keywords that can be expanded from expand_res_kwords
+validBurntypes = ('BURN_STEP', 'BURNUP', 'DAYS')
+xsblocks = ['TOT', 'CAPT', 'ABS', 'FISS', 'NSF', 'NUBAR', 'TRANSPXS', 'DIFFCOEFF', 'CHID']
+validKeywords = {
+    'KIN': ['FWD_ANA_BETA_ZERO', 'FWD_ANA_LAMBDA', 'ADJ_MEULEKAMP_BETA_EFF', 'ADJ_MEULEKAMP_LAMBDA', 'ANA_INV_SPD'],
+    'TOX': ['INHALATION_TOXICITY', 'INGESTION_TOXICITY', 'ACTINIDE_INH_TOX', 'ACTINIDE_ING_TOX',
+            'FISSION_PRODUCT_INH_TOX', 'FISSION_PRODUCT_ING_TOX'],
+    'INF': ['INF_' + xs for xs in xsblocks],
+    'B1': ['B1_' + xs for xs in xsblocks]
+}
+
 
 def showdefaults(**args: dict):
     """Show the default and supported parameters.
@@ -132,8 +143,10 @@ def showdefaults(**args: dict):
         if vv:
             newdent = len(nestgap) * 2 + keylen
             tmps = nestgap.join([str(tt) for tt in
-                                 sorted(list(_xslib[_defaults['lib']][dlib].keys()))])
-            print(''.join(textwrap.wrap(tmps, width=55, initial_indent='\n' + ' ' * newdent,
+                                 sorted(list(
+                                     _xslib[_defaults['lib']][dlib].keys()))])
+            print(''.join(textwrap.wrap(tmps, width=55,
+                                        initial_indent='\n' + ' ' * newdent,
                                         subsequent_indent='\n' + ' ' * newdent)))
         else:
             print('')
@@ -142,15 +155,19 @@ def showdefaults(**args: dict):
                              extras=perfDefs)
         prettyprint_supports('Supported burnup strings', burntypes, nestgap,
                              extras=burnDefs)
+        prettyprint_supports('Supported expandable keywords', validKeywords,
+                             nestgap, extras=True)
     else:
         prettyprint_supports('Supported perturbations', perts, nestgap)
         prettyprint_supports('Supported burnup strings', burntypes, nestgap)
+        prettyprint_supports('Supported expandable keywords', validKeywords,
+                             nestgap)
 
     raise SystemExit
 
 
-def prettyprint_supports(tstr: str, supports: (list, tuple), init_gap: str,
-                         extras=None):
+def prettyprint_supports(tstr: str, supports: (list, tuple, dict),
+                         init_gap: str, extras=None):
     """Print the supported string in a nice way"""
     print('\n', tstr)
     keylen = len(max(supports, key=len))
@@ -159,7 +176,18 @@ def prettyprint_supports(tstr: str, supports: (list, tuple), init_gap: str,
             textwrap.indent(sup, ' ' * (keylen - len(sup)))
         ), end='')
         if extras is not None:
-            print(':', extras[nn])
+            print(': ', end='')
+            if isinstance(supports, dict):
+                pstr = ', '.join(supports[sup])
+                if len(pstr) < 70:
+                    print(pstr)
+                else:
+                    print(''.join(textwrap.wrap(
+                        pstr, width=75,
+                        subsequent_indent='\n' + init_gap * 2 +
+                                          ' ' * (keylen + 1))))
+            else:
+                print(extras[nn])
         else:
             print('')
 
@@ -263,6 +291,8 @@ def checkargs_defaults(argdict: dict):
             argdict[arg] = _defaults[arg]
     return argdict
 
+
+defaults = _defaults
 
 # Testing
 if __name__ == '__main__':
