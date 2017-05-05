@@ -15,18 +15,9 @@ Classes:
 import os
 from datetime import datetime
 
-import xsboa.messages as messages
+import xsboa.constants as xbcons
+import xsboa.messages as xbmessages
 from xsboa.mat2py import vec2list
-
-validBurntypes = ('BURN_STEP', 'BURNUP', 'DAYS')
-xsblocks = ['TOT', 'CAPT', 'ABS', 'FISS', 'NSF', 'NUBAR', 'TRANSPXS', 'DIFFCOEFF', 'CHID']
-validKeywords = {
-    'KIN': ['FWD_ANA_BETA_ZERO', 'FWD_ANA_LAMBDA', 'ADJ_MEULEKAMP_BETA_EFF', 'ADJ_MEULEKAMP_LAMBDA', 'ANA_INV_SPD'],
-    'TOX': ['INHALATION_TOXICITY', 'INGESTION_TOXICITY', 'ACTINIDE_INH_TOX', 'ACTINIDE_ING_TOX',
-            'FISSION_PRODUCT_INH_TOX', 'FISSION_PRODUCT_ING_TOX'],
-    'INF': ['INF_' + xs for xs in xsblocks],
-    'B1': ['B1_' + xs for xs in xsblocks]
-}
 
 
 class SerpResFile(object):
@@ -136,23 +127,23 @@ def res_scraper(resfile: str, gculist, varlist, burnlist=None, burntype=None, ar
                 args[arg] = deflt
 
     if not os.path.exists(resfile):
-        messages.warn('File {} does not exist and cannot be scraped'.format(os.path.join(os.getcwd(), resfile)),
-                      'res_scraper()', args)
+        xbmessages.warn('File {} does not exist and cannot be scraped'.format(os.path.join(os.getcwd(), resfile)),
+                        'res_scraper()', args)
         return -1
 
     if burnlist is not None:
-        if burntype not in validBurntypes:
-            messages.warn('Burntype specifier {0} not supported at this time. Please use one of the following: {1}\n'
-                          .format(burntype, ' '.join(validBurntypes)), 'res_scraper()', args)
+        if burntype not in xbcons.validBurntypes:
+            xbmessages.warn('Burntype specifier {0} not supported at this time. Please use one of the following: {1}\n'
+                            .format(burntype, ' '.join(xbcons.validBurntypes)), 'res_scraper()', args)
             return -2
         try:
             iter(burnlist)
         except TypeError:
-            messages.warn('burnlist {0} not iterable'.format(type(burnlist)) +
-                          str(burnlist), 'res_scraper()', args)
+            xbmessages.warn('burnlist {0} not iterable'.format(type(burnlist)) +
+                            str(burnlist), 'res_scraper()', args)
             return -3
 
-    messages.status('Processing file {}'.format(resfile), args)
+    xbmessages.status('Processing file {}'.format(resfile), args)
 
     maxvarlen = max(25, len(max(varlist, key=len)))
     # maximum length of any anticipated SERENT variable
@@ -198,7 +189,7 @@ def res_scraper(resfile: str, gculist, varlist, burnlist=None, burntype=None, ar
             line = res.readline()
             lcount += 1
 
-    messages.status(' -done', args)
+    xbmessages.status(' -done', args)
     return gcu_vals
 
 
@@ -219,18 +210,17 @@ def expand_res_kwords(inkeys: list, args=None):
     """
 
     if args is None:
-        args = {'verbose': True, 'output': None}
+        args = xbcons.defaults
     elif isinstance(args, dict):
-        for arg, deflt in zip(('verbose', 'output', 'quiet'), (True, None, False)):
-            if arg not in args:
-                args[arg] = deflt
+        args = xbcons.checkargs_defaults(args)
 
     for ndx in range(len(inkeys)):
-        if inkeys[ndx] in validKeywords:
+        if inkeys[ndx] in xbcons.validKeywords:
             kwrd = inkeys.pop(ndx)
-            messages.status('Expanded and removed keyword {} from parameter string'.format(kwrd), args)
-            inkeys.extend(validKeywords[kwrd])
+            inkeys.extend(xbcons.validKeywords[kwrd])
+            xbmessages.status('Expanded and removed keyword '
+                              '{} from parameter string'.format(kwrd), args)
         elif len(inkeys[ndx]) < 5:
-            messages.status('Did not recognize {} as a valid keyword. '
-                            'Possible typo or short SERPENT variable'.format(inkeys[ndx]), args)
+            xbmessages.status('Did not recognize {} as a valid keyword. '
+                              'Possible typo or short SERPENT variable'.format(inkeys[ndx]), args)
     return inkeys

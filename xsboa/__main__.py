@@ -10,16 +10,15 @@ r"""
 A wrapper program for generating homogenized macroscopic cross sections
 and group constant parameters with SERPENT.
 
-Developed by Computational Reactor Engineering
-Group at Georgia Institute of Technology
-
-
+Developed by Computational Reactor Engineering Group at Georgia 
+Institute of Technology
 """
 import argparse
 
 import xsboa.constants as xbcons
+from xsboa.sssinp import SSSInput
 
-VERSION = '0.1.9'
+VERSION = '0.1.11'
 
 
 def get_args():
@@ -45,8 +44,7 @@ def get_args():
                                      help='run XSBOA', usage=usage[1])
     runxsboa.add_argument('-o', '--output',
                           help='write messages to file of your choice')
-    runxsboa.add_argument('file', help='nominal SERPENT input file',
-                          type=argparse.FileType('w'))
+    runxsboa.add_argument('file', help='nominal SERPENT input file')
 
     runarg = runxsboa.add_mutually_exclusive_group(required=True)
     runarg.add_argument('-c', action='store_true',
@@ -85,6 +83,7 @@ def get_args():
 if __name__ == '__main__':
     # Process input arguments
     args = get_args()
+    print(args)
 
     if len(args._get_kwargs()) == 0:
         raise SystemExit('Arguments required. '
@@ -98,7 +97,7 @@ if __name__ == '__main__':
 
     kwargs = {
         'verbose': args.verbose,
-        'output': args.o,
+        'output': args.output,
         'quiet': args.quiet,
     }
     file = args.file
@@ -117,3 +116,4 @@ if __name__ == '__main__':
         with open(kwargs['output'], 'w') as out:
             out.write(__doc__)
 
+    SSSInput(args.file, runtype, **kwargs)
