@@ -27,7 +27,7 @@ A wrapper program for generating homogenized
 macroscopic cross sections and group constant
 parameters with SERPENT.
 
-Developed by Computational Reactor Physics
+Developed by Computational Reactor Engineering
 Group at Georgia Institute of Technology
 
 """.strip()
@@ -36,7 +36,7 @@ vRelease = 0
 vMacro = 1
 vMicro = 10
 
-vDevel = 'dev'  # 'dev' for developing features, '' for completed features
+vDevel = ''  # 'dev' for developing features, '' for completed features
 vDevelMicro = 2  # empty string if feature is complete (i.e. vDevel = '')
 
 if vDevel:
